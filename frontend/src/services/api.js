@@ -16,6 +16,10 @@ const getCsrfToken = async () => {
 };
 
 api.interceptors.request.use(async (config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`; // Đảm bảo token được gửi
+  }
   if (['post', 'put', 'delete'].includes(config.method)) {
     config.headers['X-CSRF-Token'] = await getCsrfToken();
   }
@@ -36,7 +40,7 @@ export const confirmPayment = (data) => api.post('/payments/confirm', data);
 export const createReview = (data) => api.post('/reviews', data);
 export const sendMessage = (data) => api.post('/messages', data);
 export const getConversation = (otherUserId) => api.get(`/messages/${otherUserId}`);
-export const getAllUsers = () => api.get('/users/chat'); // Giữ nguyên endpoint
+export const getAllUsers = () => api.get('/admin/users');
 export const getAllBookings = () => api.get('/admin/bookings');
 export const getStats = () => api.get('/admin/stats');
 export const confirmBooking = (id) => api.put(`/admin/bookings/${id}/confirm`);
