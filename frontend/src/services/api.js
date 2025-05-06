@@ -18,7 +18,7 @@ const getCsrfToken = async () => {
 api.interceptors.request.use(async (config) => {
   const token = localStorage.getItem('token');
   if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`; // Đảm bảo token được gửi
+    config.headers['Authorization'] = `Bearer ${token}`;
   }
   if (['post', 'put', 'delete'].includes(config.method)) {
     config.headers['X-CSRF-Token'] = await getCsrfToken();
@@ -99,5 +99,8 @@ export const cancelBooking = (bookingId) => api.delete(`/bookings/${bookingId}`)
 export const updateBooking = (bookingId, data) => api.put(`/bookings/${bookingId}`, data);
 export const getUserProfile = () => api.get('/auth/me');
 export const updateUserProfile = (data) => api.put('/auth/me', data);
+
+// Thêm endpoint để lấy danh sách người dùng cho chat
+export const getUsersForChat = () => api.get('/users/chat-users');
 
 export { setToken };

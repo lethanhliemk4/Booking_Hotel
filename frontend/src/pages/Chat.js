@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { getAllUsers, getConversation, sendMessage } from '../services/api';
 import { Box, Typography, TextField, Button, List, ListItem, ListItemText, CircularProgress, Divider } from '@mui/material';
+import { getUsersForChat, getConversation, sendMessage } from '../services/api';
 import { toast } from 'react-toastify';
 
 const Chat = () => {
@@ -19,16 +19,14 @@ const Chat = () => {
       try {
         setLoadingUsers(true);
         setError(null);
-        console.log('Current user từ AuthContext:', user);
-        const response = await getAllUsers();
-        console.log('Danh sách người dùng từ API:', response.data);
+        if (!user) return; // Kiểm tra user trước khi fetch
+        const response = await getUsersForChat(); // Sử dụng endpoint mới
         let filteredUsers;
         if (user.role === 'user') {
           filteredUsers = response.data.filter(u => u.role === 'admin' && u._id !== user._id);
         } else if (user.role === 'admin') {
-          filteredUsers = response.data.filter(u => u._id !== user._id); // Admin thấy tất cả user
+          filteredUsers = response.data.filter(u => u._id !== user._id);
         }
-        console.log('Danh sách người dùng sau khi lọc:', filteredUsers);
         setUsers(filteredUsers || []);
         if (filteredUsers.length === 0) {
           setError(`Không có ${user.role === 'user' ? 'quản trị viên' : 'người dùng'} nào để chat.`);
@@ -41,8 +39,9 @@ const Chat = () => {
         setLoadingUsers(false);
       }
     };
-    if (user) fetchUsers();
-  }, [user]);
+
+    fetchUsers();
+  }, [user]); // Thêm user vào dependency để fetch lại khi user thay đổi
 
   useEffect(() => {
     if (!selectedUser) return;
@@ -51,7 +50,6 @@ const Chat = () => {
       try {
         setLoadingMessages(true);
         const response = await getConversation(selectedUser._id);
-        console.log('Danh sách tin nhắn từ API:', response.data);
         setMessages(response.data || []);
       } catch (err) {
         console.error('Lỗi khi lấy cuộc trò chuyện:', err);
@@ -62,7 +60,7 @@ const Chat = () => {
       }
     };
     fetchConversation();
-    const interval = setInterval(fetchConversation, 5000); // Polling mỗi 5 giây
+    const interval = setInterval(fetchConversation, 5000);
     return () => clearInterval(interval);
   }, [selectedUser]);
 
@@ -71,7 +69,6 @@ const Chat = () => {
 
     try {
       const messageData = { recipientId: selectedUser._id, content: newMessage };
-      console.log('Gửi tin nhắn với dữ liệu:', messageData);
       await sendMessage(messageData);
       setNewMessage('');
       const response = await getConversation(selectedUser._id);
@@ -84,12 +81,11 @@ const Chat = () => {
   };
 
   const handleSelectUser = (u) => {
-    console.log('Người dùng được chọn:', u);
     setSelectedUser(u);
     setMessages([]); // Reset messages khi chọn user mới
   };
 
-  if (!user) {
+  if (!localStorage.getItem('token')) {
     return (
       <Box sx={{ maxWidth: 1200, mx: 'auto', mt: 5, p: 3 }}>
         <Typography>Vui lòng đăng nhập để sử dụng chat.</Typography>
@@ -109,21 +105,16 @@ const Chat = () => {
     <Box sx={{ maxWidth: 1200, mx: 'auto', mt: 5, p: 3, display: 'flex', gap: 3 }}>
       <Box sx={{ width: '30%', borderRight: '1px solid #ddd' }}>
         <Typography variant="h5" gutterBottom>
-          Danh sách {user.role === 'user' ? 'quản trị viên' : 'người dùng'}
+          Danh sách {localStorage.getItem('role') === 'user' ? 'quản trị viên' : 'người dùng'}
         </Typography>
         {loadingUsers ? (
           <CircularProgress />
         ) : users.length === 0 ? (
-          <Typography>Không có {user.role === 'user' ? 'quản trị viên' : 'người dùng'} nào để chat.</Typography>
+          <Typography>Không có {localStorage.getItem('role') === 'user' ? 'quản trị viên' : 'người dùng'} nào để chat.</Typography>
         ) : (
           <List>
             {users.map((u) => (
-              <ListItem
-                key={u._id}
-                onClick={() => handleSelectUser(u)}
-                selected={selectedUser?._id === u._id}
-                sx={{ cursor: 'pointer' }}
-              >
+              <ListItem key={u._id} onClick={() => handleSelectUser(u)} selected={selectedUser?._id === u._id} sx={{ cursor: 'pointer' }}>
                 <ListItemText primary={u.username} />
               </ListItem>
             ))}
@@ -142,7 +133,7 @@ const Chat = () => {
               ) : (
                 messages.map((msg, index) => (
                   <Box key={index}>
-                    <Box sx={{ mb: 1, textAlign: msg.senderId._id === user._id ? 'right' : 'left' }}>
+                    <Box sx={{ mb: 1, textAlign: msg.senderId._id === localStorage.getItem('userId') ? 'right' : 'left' }}>
                       <Typography variant="caption" sx={{ fontWeight: 'bold', color: msg.senderId.role === 'admin' ? 'green' : 'gray' }}>
                         {msg.senderId.username} ({msg.senderId.role === 'admin' ? 'Quản trị viên' : 'Người dùng'})
                       </Typography>
@@ -152,8 +143,8 @@ const Chat = () => {
                           display: 'inline-block',
                           p: 1,
                           borderRadius: 2,
-                          bgcolor: msg.senderId._id === user._id ? '#1976d2' : '#e0e0e0',
-                          color: msg.senderId._id === user._id ? 'white' : 'black',
+                          bgcolor: msg.senderId._id === localStorage.getItem('userId') ? '#1976d2' : '#e0e0e0',
+                          color: msg.senderId._id === localStorage.getItem('userId') ? 'white' : 'black',
                         }}
                       >
                         {msg.content}
@@ -179,7 +170,7 @@ const Chat = () => {
             </Box>
           </>
         ) : (
-          <Typography>Chọn một {user.role === 'user' ? 'quản trị viên' : 'người dùng'} để bắt đầu chat.</Typography>
+          <Typography>Chọn một {localStorage.getItem('role') === 'user' ? 'quản trị viên' : 'người dùng'} để bắt đầu chat.</Typography>
         )}
       </Box>
     </Box>
