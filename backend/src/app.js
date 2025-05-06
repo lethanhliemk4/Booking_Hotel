@@ -12,6 +12,7 @@ import paymentRoutes from './routes/payment-routes.js';
 import reviewRoutes from './routes/review-routes.js';
 import messageRoutes from './routes/message-routes.js';
 import adminRoutes from './routes/admin-routes.js';
+import userRoutes from './routes/user-routes';
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api', userRoutes);
 app.use('/api/admin', csrfProtection, adminRoutes);
 
 // CSRF token endpoint

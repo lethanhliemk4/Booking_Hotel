@@ -34,4 +34,15 @@ export const userService = {
     if (adminUser.role !== 'admin') throw new Error('Unauthorized');
     return await userRepository.delete(id);
   },
+
+  getUsersForChat: async (currentUser) => {
+    const allUsers = await userRepository.findAll();
+    if (currentUser.role === 'user') {
+      return allUsers.filter(u => u.role === 'admin' && u._id.toString() !== currentUser.id);
+    } else if (currentUser.role === 'admin') {
+      return allUsers.filter(u => u._id.toString() !== currentUser.id);
+    }
+    return [];
+  },
+
 };

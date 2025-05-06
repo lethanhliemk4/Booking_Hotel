@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api',
+  baseURL: 'http://localhost:3001/api', // Đảm bảo port khớp với backend
   withCredentials: true,
 });
 
@@ -36,7 +36,7 @@ export const confirmPayment = (data) => api.post('/payments/confirm', data);
 export const createReview = (data) => api.post('/reviews', data);
 export const sendMessage = (data) => api.post('/messages', data);
 export const getConversation = (otherUserId) => api.get(`/messages/${otherUserId}`);
-export const getAllUsers = () => api.get('/admin/users');
+export const getAllUsers = () => api.get('/users/chat'); // Giữ nguyên endpoint
 export const getAllBookings = () => api.get('/admin/bookings');
 export const getStats = () => api.get('/admin/stats');
 export const confirmBooking = (id) => api.put(`/admin/bookings/${id}/confirm`);
@@ -91,9 +91,9 @@ export const getRooms = () => api.get('/rooms');
 export const getBookings = () => api.get('/bookings');
 
 // New endpoints (added while keeping existing ones)
-export const cancelBooking = (bookingId) => api.delete(`/bookings/${bookingId}`); // For canceling a booking
-export const updateBooking = (bookingId, data) => api.put(`/bookings/${bookingId}`, data); // For updating a booking
-export const getUserProfile = () => api.get('/auth/me'); // For fetching the current user's profile
-export const updateUserProfile = (data) => api.put('/auth/me', data); // For updating the current user's profile
+export const cancelBooking = (bookingId) => api.delete(`/bookings/${bookingId}`);
+export const updateBooking = (bookingId, data) => api.put(`/bookings/${bookingId}`, data);
+export const getUserProfile = () => api.get('/auth/me');
+export const updateUserProfile = (data) => api.put('/auth/me', data);
 
 export { setToken };

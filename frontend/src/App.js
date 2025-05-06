@@ -14,6 +14,8 @@ import ReviewManagement from './pages/ReviewManagement';
 import Rooms from './pages/Rooms';
 import MyBookings from './pages/MyBookings';
 import RoomDetails from './pages/RoomDetails'; // Add this import
+import HotelDetails from './pages/HotelDetails'; // Import component mới
+
 
 function App() {
   return (
@@ -26,6 +28,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/hotels" element={<Hotels />} />
+            <Route path="/hotels/:id" element={<HotelDetails />} /> {/* Thêm route cho chi tiết khách sạn */}
             <Route path="/hotels/:hotelId/rooms" element={<Rooms />} />
             <Route path="/booking/:bookingId" element={<Booking />} />
             <Route path="/chat" element={<Chat />} />
