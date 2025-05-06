@@ -5,14 +5,22 @@ import { userRepository } from '../repositories/user-repository.js';
 export const userService = {
   register: async ({ email, password, name }) => {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await userRepository.create({ email, password: hashedPassword, name });
+    const user = await userRepository.create({ email, password: hashedPassword, name, role: 'user' });
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     return { user, token };
   },
 
   login: async ({ email, password }) => {
     const user = await userRepository.findByEmail(email);
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    console.log('User found by email:', user); // Thêm log debug
+    if (!user) {
+      console.log('No user found for email:', email); // Thêm log
+      throw new Error('Invalid credentials');
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    console.log('Password match result:', isMatch); // Thêm log debug
+    if (!isMatch) {
+      console.log('Password does not match for user:', user.email); // Thêm log
       throw new Error('Invalid credentials');
     }
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
@@ -37,12 +45,16 @@ export const userService = {
 
   getUsersForChat: async (currentUser) => {
     const allUsers = await userRepository.findAll();
+    console.log('Tất cả người dùng từ database:', allUsers);
     if (currentUser.role === 'user') {
-      return allUsers.filter(u => u.role === 'admin' && u._id.toString() !== currentUser.id);
+      const adminUsers = allUsers.filter(u => u.role === 'admin' && u._id.toString() !== currentUser.id);
+      console.log('Danh sách admin cho user:', adminUsers);
+      return adminUsers;
     } else if (currentUser.role === 'admin') {
-      return allUsers.filter(u => u._id.toString() !== currentUser.id);
+      const otherUsers = allUsers.filter(u => u._id.toString() !== currentUser.id);
+      console.log('Danh sách user cho admin:', otherUsers);
+      return otherUsers;
     }
     return [];
   },
-
 };
